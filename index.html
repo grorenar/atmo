@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Convection atmosphérique — Cap Sur Le Cockpit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700&family=Barlow:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --sky-deep:   #f0f8ff;
+  --sky-mid:    #daeef9;
+  --sky-light:  #b8d8ef;
+  --sky-pale:   #e8f4fd;
+  --ice:        #1a6bb5;
+  --ice-dim:    #2d7ec8;
+  --white:      #1a2e42;
+  --muted:      #4a6a85;
+  --muted2:     #7a9db5;
+  --elr-col:    #1a6bb5;
+  --dalr-col:   #c0392b;
+  --salr-col:   #1a7a50;
+  --bub-col:    #c05800;
+  --lcl-col:    #c05800;
+  --lfc-col:    #1a7a50;
+  --accent:     #c05800;
+  --danger:     #c0392b;
+  --success:    #1a7a50;
+  --border:     rgba(45,110,166,0.14);
+  --border-med: rgba(45,110,166,0.26);
+  --card-bg:    rgba(255,255,255,0.78);
+  --font-head:  'Barlow Condensed', sans-serif;
+  --font-body:  'Barlow', sans-serif;
+  --font-mono:  'JetBrains Mono', monospace;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: linear-gradient(180deg, #c8e8f7 0%, #dff0fb 30%, #f0f8ff 70%, #f5f9ff 100%);
+  color: var(--white);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Header ── */
+.site-header {
+  background: rgba(255,255,255,0.92);
+  border-bottom: 1px solid var(--border-med);
+  padding: 14px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(8px);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--white);
+}
+
+.logo-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--accent);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 14px;
+  color: #fff;
+  letter-spacing: 0;
+  flex-shrink: 0;
+}
+
+.logo-text {
+  font-family: var(--font-head);
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.logo-sub {
+  font-family: var(--font-head);
+  font-weight: 300;
+  font-size: 11px;
+  letter-spacing: .1em;
+  color: var(--muted);
+  text-transform: uppercase;
+  display: block;
+  margin-top: -2px;
+}
+
+.header-badge {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid rgba(240,153,43,0.35);
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+/* ── Hero band ── */
+.hero {
+  padding: 48px 32px 32px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.hero-label {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+.hero h1 {
+  font-family: var(--font-head);
+  font-size: clamp(32px, 5vw, 54px);
+  font-weight: 700;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--white);
+  margin-bottom: 14px;
+}
+
+.hero h1 em {
+  font-style: normal;
+  color: var(--ice-dim);
+  font-weight: 300;
+}
+
+.hero-desc {
+  font-size: 15px;
+  color: var(--muted);
+  max-width: 600px;
+  line-height: 1.6;
+}
+
+/* ── Main simulator card ── */
+.sim-wrap {
+  max-width: 1100px;
+  margin: 0 auto 0;
+  padding: 0 32px 40px;
+}
+
+.sim-card {
+  background: rgba(255,255,255,0.80);
+  border: 1px solid var(--border-med);
+  border-radius: 12px;
+  padding: 24px;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 20px rgba(45,110,166,0.08);
+}
+
+/* ── Controls ── */
+.controls-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.ctrl {
+  background: rgba(224,242,252,0.65);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  transition: border-color .2s;
+}
+
+.ctrl:hover { border-color: var(--border-med); }
+
+.ctrl-label {
+  font-family: var(--font-head);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ctrl-label .color-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.ctrl-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Custom range sliders */
+input[type=range] {
+  -webkit-appearance: none;
+  flex: 1;
+  height: 3px;
+  background: rgba(45,110,166,0.22);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #1a6bb5;
+  border: 2px solid #fff;
+  cursor: pointer;
+  transition: transform .15s;
+  box-shadow: 0 1px 4px rgba(26,107,181,0.35);
+}
+input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.2); }
+input[type=range]::-moz-range-thumb {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: #1a6bb5; border: 2px solid #fff;
+  cursor: pointer;
+}
+
+.ctrl-val {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--white);
+  min-width: 52px;
+  text-align: right;
+}
+
+.ctrl-hint {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  margin-top: 5px;
+  min-height: 13px;
+  line-height: 1.3;
+}
+
+.ctrl-warn {
+  font-size: 9px;
+  color: var(--accent);
+  margin-top: 4px;
+  min-height: 12px;
+  font-family: var(--font-body);
+}
+
+/* ── Main layout ── */
+.main-layout {
+  display: grid;
+  grid-template-columns: 1fr 190px;
+  gap: 14px;
+}
+
+/* ── Chart ── */
+.chart-panel {
+  background: rgba(255,255,255,0.72);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.legend-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-head);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.leg-line { width: 18px; height: 2px; }
+.leg-dash { width: 18px; height: 0; }
+
+.chart-area { position: relative; height: 400px; }
+
+.btn-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.btn {
+  flex: 1;
+  font-family: var(--font-head);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 9px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-med);
+  background: transparent;
+  color: var(--white);
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+
+.btn:hover { background: rgba(224,242,252,0.9); }
+.btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* ── Side panel ── */
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sky-canvas-wrap {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.info-card {
+  background: rgba(255,255,255,0.82);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  box-shadow: 0 1px 4px rgba(45,110,166,0.06);
+}
+
+.info-lbl {
+  font-family: var(--font-head);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  margin-bottom: 2px;
+}
+
+.info-val {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--white);
+}
+
+.stab-pill {
+  display: inline-block;
+  font-family: var(--font-head);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .05em;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+
+/* ── Glossary section ── */
+.glossary-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 32px 64px;
+}
+
+.section-title {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-med);
+}
+
+.glossary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.gloss-card {
+  background: rgba(255,255,255,0.78);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 18px;
+  transition: border-color .2s, box-shadow .2s;
+  box-shadow: 0 1px 6px rgba(45,110,166,0.06);
+}
+
+.gloss-card:hover { border-color: var(--border-med); box-shadow: 0 4px 16px rgba(45,110,166,0.12); }
+
+.gloss-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.gloss-abbr {
+  font-family: var(--font-head);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.gloss-fullname {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  line-height: 1.3;
+  padding-top: 2px;
+}
+
+.gloss-value {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+.gloss-body {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.gloss-body strong {
+  color: var(--white);
+  font-weight: 500;
+}
+
+/* ── Footer ── */
+.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 20px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.footer-copy {
+  font-size: 12px;
+  color: var(--muted2);
+}
+
+.footer-link {
+  font-family: var(--font-head);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.footer-link:hover { text-decoration: underline; }
+
+/* ── Divider ── */
+.divider {
+  height: 1px;
+  background: var(--border);
+  max-width: 1100px;
+  margin: 0 auto 32px;
+  padding: 0 32px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 760px) {
+  .controls-grid { grid-template-columns: 1fr 1fr; }
+  .main-layout { grid-template-columns: 1fr; }
+  .hero { padding: 28px 16px 20px; }
+  .sim-wrap, .glossary-wrap { padding-left: 16px; padding-right: 16px; }
+  .site-header { padding: 12px 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <a href="https://capsurlecockpit.fr" class="logo">
+    <div class="logo-icon">CSC</div>
+    <div>
+      <span class="logo-text">Cap Sur Le Cockpit</span>
+      <span class="logo-sub">Ressources ATPL &amp; Pilotage</span>
+    </div>
+  </a>
+  <span class="header-badge">Outil interactif</span>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <p class="hero-label">Météorologie — ATPL</p>
+  <h1>Convection<br><em>atmosphérique</em></h1>
+  <p class="hero-desc">
+    Explorez les gradients thermiques et simulez le comportement d'une bulle d'air convective.
+    Manipulez les curseurs pour comprendre les conditions d'instabilité qui gouvernent la formation des nuages et des orages.
+  </p>
+</section>
+
+<!-- SIMULATOR -->
+<div class="sim-wrap">
+<div class="sim-card">
+
+  <!-- Controls -->
+  <div class="controls-grid">
+    <div class="ctrl">
+      <div class="ctrl-label">
+        ELR <span style="color:var(--muted2);font-weight:400">(°C/1000 ft)</span>
+        <span class="color-dot" style="background:var(--elr-col)"></span>
+      </div>
+      <div class="ctrl-row">
+        <input type="range" id="elr" min="-2" max="5" step="0.1" value="2.5">
+        <span class="ctrl-val" id="ev">2.5</span>
+      </div>
+      <div class="ctrl-hint" id="elr-hint"></div>
+    </div>
+
+    <div class="ctrl">
+      <div class="ctrl-label">
+        T° sol <span style="color:var(--muted2);font-weight:400">(°C)</span>
+      </div>
+      <div class="ctrl-row">
+        <input type="range" id="t0" min="-10" max="40" step="1" value="20">
+        <span class="ctrl-val" id="tv">20°C</span>
+      </div>
+      <div class="ctrl-warn" id="dp-warn"></div>
+    </div>
+
+    <div class="ctrl">
+      <div class="ctrl-label">
+        Point de rosée <span style="color:var(--muted2);font-weight:400">(°C)</span>
+      </div>
+      <div class="ctrl-row">
+        <input type="range" id="dp" min="-20" max="40" step="1" value="11">
+        <span class="ctrl-val" id="dv">11°C</span>
+      </div>
+      <div class="ctrl-warn" id="t0-warn"></div>
+    </div>
+
+    <div class="ctrl">
+      <div class="ctrl-label">
+        Perturbation <span style="color:var(--muted2);font-weight:400">(ft/s)</span>
+      </div>
+      <div class="ctrl-row">
+        <input type="range" id="pert" min="0" max="400" step="5" value="80">
+        <span class="ctrl-val" id="ptv">80</span>
+      </div>
+      <div class="ctrl-hint" id="pert-hint"></div>
+    </div>
+  </div>
+
+  <!-- Chart + side -->
+  <div class="main-layout">
+    <div class="chart-panel">
+      <div class="legend-row">
+        <div class="legend-item">
+          <span class="leg-line" style="background:var(--elr-col)"></span>ELR
+        </div>
+        <div class="legend-item">
+          <span class="leg-dash" style="border-top:2px dashed var(--dalr-col)"></span>DALR 3°/1000ft
+        </div>
+        <div class="legend-item">
+          <span class="leg-dash" style="border-top:2px dashed var(--salr-col)"></span>SALR 1.8°/1000ft
+        </div>
+        <div class="legend-item">
+          <span class="leg-dash" style="border-top:2px dashed var(--bub-col)"></span>Trajectoire bulle
+        </div>
+      </div>
+      <div class="chart-area"><canvas id="skewt"></canvas></div>
+      <div class="btn-row">
+        <button class="btn" id="btn-play" onclick="startAnim()">▶ Lancer</button>
+        <button class="btn" onclick="resetAll()">↺ Reset</button>
+      </div>
+    </div>
+
+    <div class="side-panel">
+      <div class="sky-canvas-wrap">
+        <canvas id="sky" width="190" height="240"></canvas>
+      </div>
+      <div class="info-card">
+        <div class="info-lbl">Altitude</div>
+        <div class="info-val" id="sa">0 ft</div>
+      </div>
+      <div class="info-card">
+        <div class="info-lbl">ΔT bulle − environnement</div>
+        <div class="info-val" id="sd">—</div>
+      </div>
+      <div class="info-card">
+        <div class="info-lbl">État de la bulle</div>
+        <div class="info-val" id="ss" style="font-size:11px">En attente</div>
+      </div>
+      <div class="info-card">
+        <div class="info-lbl">Stabilité</div>
+        <div id="sstab"><span class="stab-pill" style="background:rgba(74,106,133,0.12);color:var(--muted)">—</span></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /sim-card -->
+</div><!-- /sim-wrap -->
+
+<!-- GLOSSARY -->
+<div class="glossary-wrap">
+  <div style="height:40px"></div>
+  <p class="section-title">Glossaire des concepts</p>
+
+  <div class="glossary-grid">
+
+    <div class="gloss-card">
+      <div class="gloss-header">
+        <div>
+          <div class="gloss-abbr" style="color:var(--elr-col)">ELR</div>
+          <div class="gloss-fullname">Environmental Lapse Rate</div>
+          <span class="gloss-value" style="background:rgba(26,107,181,0.12);color:var(--elr-col)">variable · °C/1000 ft</span>
+        </div>
+      </div>
+      <p class="gloss-body">
+        Le <strong>gradient thermique environnemental</strong> : la façon dont la température de l'atmosphère ambiante diminue avec l'altitude.
+        Il est mesuré par radiosondage et varie selon les conditions météo.
+        C'est ce gradient qui détermine si l'atmosphère est stable, instable ou conditionnellement instable.
+        Une <strong>isotherme</strong> (ELR = 0) signifie que la température ne change pas avec l'altitude.
+        Une <strong>inversion</strong> (ELR négatif) signifie que la température augmente — phénomène fréquent la nuit ou en basses couches.
+      </p>
+    </div>
+
+    <div class="gloss-card">
+      <div class="gloss-header">
+        <div>
+          <div class="gloss-abbr" style="color:var(--dalr-col)">DALR</div>
+          <div class="gloss-fullname">Dry Adiabatic Lapse Rate</div>
+          <span class="gloss-value" style="background:rgba(192,57,43,0.12);color:var(--dalr-col)">fixe · 3°C/1000 ft</span>
+        </div>
+      </div>
+      <p class="gloss-body">
+        Le <strong>gradient adiabatique sec</strong> : taux auquel une bulle d'air <em>non saturée</em> se refroidit lorsqu'elle monte (ou se réchauffe en descendant), sans échange de chaleur avec l'extérieur.
+        C'est une constante physique dérivée des lois thermodynamiques.
+        Tant que la bulle n'est pas saturée, c'est ce gradient qui gouverne son évolution thermique.
+      </p>
+    </div>
+
+    <div class="gloss-card">
+      <div class="gloss-header">
+        <div>
+          <div class="gloss-abbr" style="color:var(--salr-col)">SALR</div>
+          <div class="gloss-fullname">Saturated Adiabatic Lapse Rate</div>
+          <span class="gloss-value" style="background:rgba(26,122,80,0.12);color:var(--salr-col)">≈ 1.8°C/1000 ft</span>
+        </div>
+      </div>
+      <p class="gloss-body">
+        Le <strong>gradient adiabatique saturé</strong> : taux de refroidissement d'une bulle <em>saturée</em> (qui condense).
+        Il est inférieur au DALR car la condensation libère de la chaleur latente, ce qui ralentit le refroidissement.
+        En pratique il varie entre 1.5 et 2°C/1000 ft selon la température et la pression.
+        La valeur de 1.8 est une approximation couramment utilisée en cours ATPL.
+      </p>
+    </div>
+
+    <div class="gloss-card">
+      <div class="gloss-header">
+        <div>
+          <div class="gloss-abbr" style="color:var(--lcl-col)">LCL</div>
+          <div class="gloss-fullname">Lifting Condensation Level</div>
+          <span class="gloss-value" style="background:rgba(192,88,0,0.12);color:var(--lcl-col)">= écart T/Td × 400 ft</span>
+        </div>
+      </div>
+      <p class="gloss-body">
+        Le <strong>niveau de condensation par soulèvement</strong> : altitude à laquelle une bulle d'air en ascension atteint son point de rosée et commence à condenser.
+        C'est la <strong>base des nuages convectifs</strong> (cumulus, cumulonimbus).
+        La règle pratique est : LCL (ft) ≈ (T − Td) × 400.
+        Au-dessus du LCL, la bulle suit le SALR au lieu du DALR.
+      </p>
+    </div>
+
+    <div class="gloss-card">
+      <div class="gloss-header">
+        <div>
+          <div class="gloss-abbr" style="color:var(--lfc-col)">LFC</div>
+          <div class="gloss-fullname">Level of Free Convection</div>
+          <span class="gloss-value" style="background:rgba(26,122,80,0.12);color:var(--lfc-col)">SALR croise ELR</span>
+        </div>
+      </div>
+      <p class="gloss-body">
+        Le <strong>niveau de convection libre</strong> : altitude au-dessus du LCL où la bulle saturée devient enfin <em>plus chaude</em> que l'environnement (ΔT &gt; 0).
+        À partir de ce point, la poussée d'Archimède devient ascendante et la bulle <strong>s'emballe sans aide extérieure</strong>.
+        Il n'existe que dans les cas d'instabilité conditionnelle, et requiert une perturbation suffisante pour être atteint.
+      </p>
+    </div>
+
+    <div class="gloss-card">
+      <div class="gloss-header">
+        <div>
+          <div class="gloss-abbr" style="color:var(--muted)">Stabilité</div>
+          <div class="gloss-fullname">Régimes de stabilité atmosphérique</div>
+        </div>
+      </div>
+      <p class="gloss-body">
+        <strong style="color:var(--dalr-col)">Absolument instable</strong> : ELR &gt; DALR. La bulle est toujours plus chaude — convection spontanée dès le sol, orages violents possibles.<br><br>
+        <strong style="color:var(--salr-col)">Absolument stable</strong> : ELR &lt; SALR. La bulle est toujours plus froide — elle retombe quelle que soit la perturbation.<br><br>
+        <strong style="color:var(--accent)">Conditionnellement instable</strong> : SALR &lt; ELR &lt; DALR. Stable à sec, instable si saturée. Une perturbation suffisante pour atteindre le LFC déclenche la convection.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div style="border-top:1px solid var(--border);max-width:1100px;margin:0 auto">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 32px">
+    <span style="font-size:12px;color:var(--muted2)">Cap Sur Le Cockpit — Ressources ATPL</span>
+    <a href="https://capsurlecockpit.fr" class="footer-link">capsurlecockpit.fr →</a>
+  </div>
+</div>
+
+<!-- SCRIPTS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.0.1/chartjs-plugin-annotation.min.js"></script>
+<script>
+const DALR=3.0, SALR=1.8, MAXALT=18000, EPS=0.08;
+const FPS_INTERVAL=50, DAMPING=0.992, ACCEL_SCALE=3.5;
+let chart=null, rafId=null, running=false, bubAlt=0, bubVel=0;
+
+/* ── Helpers ── */
+function p(id){ return parseFloat(document.getElementById(id).value); }
+function dpEff(){ return Math.min(p('dp'), p('t0')); }
+function lcl(){ const s=p('t0')-dpEff(); return s<=0 ? 0 : (s/2.5)*1000; }
+function tEnv(a){ return p('t0') - p('elr')*a/1000; }
+function tBub(a){
+  const lc=lcl();
+  if(a<=lc) return p('t0') - DALR*a/1000;
+  return (p('t0') - DALR*lc/1000) - SALR*(a-lc)/1000;
+}
+function dT(a){ return tBub(a) - tEnv(a); }
+
+function lfc(){
+  const lc=lcl();
+  for(let a=lc; a<=MAXALT; a+=50){ if(dT(a)>EPS) return a; }
+  return null;
+}
+
+function enforceDP(){
+  const t0=p('t0'), dp=p('dp'), el=document.getElementById('dp'), w=document.getElementById('dp-warn');
+  if(dp>t0){ el.value=t0; document.getElementById('dv').textContent=t0+'°C'; w.textContent='Limité à T° sol ('+t0+'°C)'; }
+  else w.textContent='';
+}
+
+function simMaxAlt(v0){
+  let a=0, v=v0;
+  for(let i=0; i<3000; i++){
+    v+=dT(a)*ACCEL_SCALE; v*=DAMPING; a+=v;
+    if(a<=0&&v<=0) return 0;
+    if(a>MAXALT) return MAXALT;
+  }
+  return a;
+}
+
+function seuilLFC(){
+  const lf=lfc();
+  if(!lf) return null;
+  if(p('elr')>DALR) return 0;
+  if(simMaxAlt(400)<lf) return null;
+  let lo=0, hi=400;
+  for(let i=0; i<30; i++){ const m=(lo+hi)/2; if(simMaxAlt(m)>=lf) hi=m; else lo=m; }
+  return Math.ceil(hi);
+}
+
+/* ── X axis bounds : FIXED regardless of ELR ──
+   We always show [-30°C … +45°C] so the graph never jumps. */
+const X_MIN = -30;
+const X_MAX = 45;
+
+/* ── Labels / hints ── */
+function updateElrHint(){
+  const elr=p('elr'), hint=document.getElementById('elr-hint');
+  if(elr < -EPS){ hint.style.color='#1a6bb5'; hint.textContent='Inversion de température'; }
+  else if(Math.abs(elr)<EPS){ hint.style.color='#4a6a85'; hint.textContent='Atmosphère isotherme'; }
+  else if(Math.abs(elr-SALR)<EPS){ hint.style.color='#1a7a50'; hint.textContent='Neutre saturé'; }
+  else if(Math.abs(elr-DALR)<EPS){ hint.style.color='#4a6a85'; hint.textContent='Neutre sec'; }
+  else if(elr>DALR){ hint.style.color='#c0392b'; hint.textContent='Absolument instable'; }
+  else if(elr<SALR){ hint.style.color='#1a6bb5'; hint.textContent='Absolument stable'; }
+  else{ hint.style.color='#c05800'; hint.textContent='Cond. instable'; }
+}
+
+function updatePertHint(){
+  const hint=document.getElementById('pert-hint');
+  const elr=p('elr'), lf=lfc();
+  if(elr<-EPS||Math.abs(elr)<EPS){ hint.style.color='#1a6bb5'; hint.textContent='Inversion/isotherme — très stable'; return; }
+  if(Math.abs(elr-DALR)<EPS||Math.abs(elr-SALR)<EPS){ hint.textContent=''; return; }
+  if(elr>DALR){ hint.style.color='#c0392b'; hint.textContent='Instable sans perturbation'; return; }
+  if(elr<SALR){ hint.style.color='#1a6bb5'; hint.textContent='Stable même saturé'; return; }
+  if(!lf){ hint.style.color='#1a6bb5'; hint.textContent='Stable au-dessus du LCL'; return; }
+  const seuil=seuilLFC();
+  if(seuil===null){ hint.style.color='#1a6bb5'; hint.textContent='Trop stable, max insuffisant'; return; }
+  if(seuil===0){ hint.style.color='#1a7a50'; hint.textContent='Emballe sans perturbation'; return; }
+  const cur=p('pert');
+  if(cur>=seuil){ hint.style.color='#1a7a50'; hint.textContent='≥ seuil LFC ('+seuil+') ✓'; }
+  else{ hint.style.color='#c0392b'; hint.textContent='Seuil LFC ≈ '+seuil+' ft/s'; }
+}
+
+function stabInfo(elr){
+  if(elr < -EPS) return {t:'Inversion', bg:'rgba(26,107,181,0.12)', fg:'#1a5090'};
+  if(Math.abs(elr)<EPS) return {t:'Isotherme', bg:'rgba(74,106,133,0.12)', fg:'#3a5570'};
+  if(Math.abs(elr-DALR)<EPS) return {t:'Neutre (sec)', bg:'rgba(74,106,133,0.12)', fg:'#3a5570'};
+  if(Math.abs(elr-SALR)<EPS) return {t:'Neutre (saturé)', bg:'rgba(74,106,133,0.12)', fg:'#3a5570'};
+  if(elr>DALR) return {t:'Absolument instable', bg:'rgba(192,57,43,0.12)', fg:'#8a1e10'};
+  if(elr<SALR) return {t:'Absolument stable', bg:'rgba(26,107,181,0.12)', fg:'#1a5090'};
+  return {t:'Cond. instable', bg:'rgba(192,88,0,0.12)', fg:'#8a3e00'};
+}
+
+/* ── Chart ── */
+function buildChart(){
+  enforceDP();
+  const elr=p('elr'), t0=p('t0'), lc=lcl(), lf=lfc();
+  const alts=[]; for(let a=0; a<=MAXALT; a+=400) alts.push(a);
+
+  const elrD  = alts.map(a=>({x: t0-elr*a/1000,  y:a}));
+  const dalrD = alts.map(a=>({x: t0-DALR*a/1000, y:a}));
+  const salrD = alts.map(a=>({x: t0-SALR*a/1000, y:a}));
+  const bubD  = alts.map(a=>({x: tBub(a),         y:a}));
+
+  const gc='rgba(26,107,181,0.08)', tc='#4a6a85';
+
+  const stab=stabInfo(elr);
+  const anns={
+    zone:{type:'box', xMin:X_MIN, xMax:X_MAX, yMin:0, yMax:MAXALT,
+          backgroundColor: stab.bg.replace('0.18','0.04'), borderWidth:0, drawTime:'beforeDatasetsDraw'}
+  };
+
+  if(lc>0&&lc<MAXALT){
+    anns.lcl={type:'line', yMin:lc, yMax:lc, borderColor:'#f0992b', borderWidth:1, borderDash:[4,4],
+      label:{content:'LCL ~'+Math.round(lc/100)*100+' ft', display:true, position:'start',
+             font:{size:9,family:'JetBrains Mono'}, color:'#c05800', backgroundColor:'rgba(255,255,255,0.85)', padding:2}};
+  }
+  if(lf&&lf<MAXALT){
+    anns.lfc={type:'line', yMin:lf, yMax:lf, borderColor:'#1a7a50', borderWidth:1.5, borderDash:[2,3],
+      label:{content:'LFC ~'+Math.round(lf/100)*100+' ft', display:true, position:'start',
+             font:{size:9,family:'JetBrains Mono'}, color:'#1a7a50', backgroundColor:'rgba(255,255,255,0.85)', padding:2}};
+  }
+
+  const datasets=[
+    {label:'ELR',  data:elrD,  borderColor:'#1a6bb5', pointRadius:0, borderWidth:2.5, fill:false, tension:0, parsing:{xAxisKey:'x',yAxisKey:'y'}},
+    {label:'DALR', data:dalrD, borderColor:'#c0392b', pointRadius:0, borderWidth:1.8, borderDash:[6,3], fill:false, tension:0, parsing:{xAxisKey:'x',yAxisKey:'y'}},
+    {label:'SALR', data:salrD, borderColor:'#1a7a50', pointRadius:0, borderWidth:1.8, borderDash:[4,4], fill:false, tension:0, parsing:{xAxisKey:'x',yAxisKey:'y'}},
+    {label:'Bulle',data:bubD,  borderColor:'#c05800', pointRadius:0, borderWidth:1.5, borderDash:[3,3], fill:false, tension:0, parsing:{xAxisKey:'x',yAxisKey:'y'}},
+  ];
+
+  const opts={
+    responsive:true, maintainAspectRatio:false, animation:false,
+    plugins:{
+      legend:{display:false},
+      tooltip:{mode:'index', intersect:false,
+        callbacks:{title:i=>Math.round(i[0].parsed.y).toLocaleString()+' ft', label:i=>i.dataset.label+': '+i.parsed.x.toFixed(1)+'°C'},
+        backgroundColor:'rgba(255,255,255,0.96)', titleColor:'#1a2e42', bodyColor:'#4a6a85', borderColor:'rgba(45,110,166,0.2)', borderWidth:1
+      },
+      annotation:{annotations:anns}
+    },
+    scales:{
+      x:{type:'linear', min:X_MIN, max:X_MAX,
+         title:{display:true, text:'Température (°C)', color:tc, font:{size:11,family:'Barlow'}},
+         ticks:{color:tc, font:{size:10}, callback:v=>v+'°'}, grid:{color:gc}},
+      y:{type:'linear', min:0, max:MAXALT,
+         title:{display:true, text:'Altitude (ft)', color:tc, font:{size:11,family:'Barlow'}},
+         ticks:{color:tc, font:{size:10}, stepSize:2000, callback:v=>v.toLocaleString()}, grid:{color:gc}}
+    }
+  };
+
+  if(chart){
+    chart.data.datasets=datasets;
+    chart.options.plugins.annotation.annotations=anns;
+    chart.update('none');
+  } else {
+    chart=new Chart(document.getElementById('skewt'),{type:'line', data:{datasets}, options:opts});
+  }
+  updateStabLabel(); updateElrHint(); updatePertHint();
+  moveBubbleTo(bubAlt);
+}
+
+function updateStabLabel(){
+  const s=stabInfo(p('elr'));
+  document.getElementById('sstab').innerHTML=
+    '<span class="stab-pill" style="background:'+s.bg+';color:'+s.fg+'">'+s.t+'</span>';
+}
+
+/* ── Bubble position ── */
+function moveBubbleTo(alt){
+  if(!chart) return;
+  const dt=dT(alt);
+  const col=dt>EPS?'#c0392b':dt<-EPS?'#1a6bb5':'#6a8ea8';
+  chart.options.plugins.annotation.annotations.bubDot={
+    type:'point', xValue:tBub(alt), yValue:alt,
+    radius:8, backgroundColor:col, borderColor:'rgba(255,255,255,0.95)', borderWidth:2
+  };
+  chart.update('none');
+  document.getElementById('sa').textContent=Math.round(alt).toLocaleString()+' ft';
+  const dtEl=document.getElementById('sd');
+  dtEl.textContent=(dt>=0?'+':'')+dt.toFixed(1)+' °C';
+  dtEl.style.color=col;
+  drawSky(alt,dt);
+}
+
+/* ── Sky canvas ── */
+function drawSky(alt, dt){
+  const c=document.getElementById('sky'), W=c.width, H=c.height, ctx=c.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+
+  // Ciel bleu azur de jour
+  const skyG=ctx.createLinearGradient(0,0,0,H-24);
+  skyG.addColorStop(0,'#4a9fd4');
+  skyG.addColorStop(0.5,'#78bce0');
+  skyG.addColorStop(1,'#aed8ee');
+  ctx.fillStyle=skyG; ctx.fillRect(0,0,W,H-24);
+
+  // Haze horizon chaud
+  const hazeG=ctx.createLinearGradient(0,H-55,0,H-24);
+  hazeG.addColorStop(0,'rgba(255,255,255,0)');
+  hazeG.addColorStop(1,'rgba(210,235,190,0.55)');
+  ctx.fillStyle=hazeG; ctx.fillRect(0,H-55,W,31);
+
+  // Ground — herbe lumineuse
+  const gG=ctx.createLinearGradient(0,H-24,0,H);
+  gG.addColorStop(0,'#7ec850'); gG.addColorStop(1,'#5aaa30');
+  ctx.fillStyle=gG; ctx.fillRect(0,H-24,W,24);
+
+  // Soleil en haut à droite
+  ctx.globalAlpha=0.95;
+  ctx.fillStyle='#ffe566';
+  ctx.beginPath(); ctx.arc(W-20,16,11,0,Math.PI*2); ctx.fill();
+  ctx.globalAlpha=0.2;
+  ctx.fillStyle='#ffe566';
+  ctx.beginPath(); ctx.arc(W-20,16,18,0,Math.PI*2); ctx.fill();
+  ctx.globalAlpha=1;
+
+  // Petits nuages décoratifs de fond (statiques)
+  function bgCloud(cx,cy,sc,al){
+    ctx.globalAlpha=al; ctx.fillStyle='rgba(255,255,255,0.93)';
+    [{dx:0,dy:0,r:10*sc},{dx:10*sc,dy:2*sc,r:8*sc},{dx:-9*sc,dy:3*sc,r:7*sc},{dx:0,dy:6*sc,r:9*sc}]
+    .forEach(pf=>{ctx.beginPath();ctx.arc(cx+pf.dx,cy+pf.dy,pf.r,0,Math.PI*2);ctx.fill();});
+    ctx.globalAlpha=1;
+  }
+  bgCloud(25,48,1.1,0.55); bgCloud(148,38,0.8,0.42); bgCloud(80,26,0.7,0.35);
+
+  function altToY(a){ return (H-24)-(a/MAXALT)*(H-24); }
+
+  const lc=lcl(), lf=lfc();
+  const lclY = lc>0 ? altToY(lc) : null;
+  const bubY  = altToY(alt);
+
+  // Nuage convectif : base ancrée au LCL, sommet suit la bulle
+  if(lc>0 && lc<MAXALT && alt>lc && lclY!==null){
+    const cloudTop  = bubY;
+    const cloudBase = lclY;
+    const cloudH    = cloudBase - cloudTop;
+    const prog      = Math.min(1, cloudH/((H-24)*0.45));
+    const cx        = W/2;
+    const steps     = Math.max(3, Math.round(cloudH/8));
+    ctx.fillStyle='rgba(255,255,255,0.95)';
+    for(let i=0; i<=steps; i++){
+      const frac = i/steps;
+      const rowY = cloudBase - frac*cloudH;
+      const rowW = 14 + prog*14 + frac*12;
+      const nPuffs = Math.max(1, Math.round(1+frac*2.5));
+      ctx.globalAlpha = 0.6 + prog*0.35;
+      for(let j=0; j<nPuffs; j++){
+        const ox = (j-(nPuffs-1)/2)*(rowW*0.85);
+        const r  = rowW*(0.32+frac*0.22);
+        ctx.beginPath(); ctx.arc(cx+ox, rowY, r, 0, Math.PI*2); ctx.fill();
+      }
+    }
+    // Ombre douce sous la base
+    ctx.globalAlpha=0.1; ctx.fillStyle='#3a6a8a';
+    ctx.beginPath(); ctx.ellipse(cx, cloudBase+5, 18+prog*10, 4, 0, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha=1;
+  }
+
+  // Ligne LCL
+  if(lc>0 && lc<MAXALT && lclY!==null){
+    ctx.strokeStyle='#c05800'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(0,lclY); ctx.lineTo(W,lclY); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#c05800'; ctx.font='bold 8px JetBrains Mono,monospace';
+    ctx.fillText('LCL',3,lclY-3);
+  }
+
+  // Ligne LFC
+  if(lf && lf<MAXALT){
+    const lfY=altToY(lf);
+    ctx.strokeStyle='#1a7a50'; ctx.lineWidth=1; ctx.setLineDash([2,3]);
+    ctx.beginPath(); ctx.moveTo(0,lfY); ctx.lineTo(W,lfY); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#1a7a50'; ctx.font='bold 8px JetBrains Mono,monospace';
+    ctx.fillText('LFC',3,lfY-3);
+  }
+
+  // Bulle
+  const R=14;
+  const col  = dt>EPS?'#c0392b' : dt<-EPS?'#1a6bb5' : '#6a8ea8';
+  const fill = dt>EPS?'rgba(192,57,43,0.85)' : dt<-EPS?'rgba(26,107,181,0.85)' : 'rgba(106,142,168,0.72)';
+  ctx.beginPath(); ctx.arc(W/2, bubY, R, 0, Math.PI*2);
+  ctx.fillStyle=fill; ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.92)'; ctx.lineWidth=1.8; ctx.stroke();
+
+  ctx.fillStyle='#fff'; ctx.font='bold 8px JetBrains Mono,monospace';
+  ctx.textAlign='center';
+  ctx.fillText((dt>=0?'+':'')+dt.toFixed(1)+'°', W/2, bubY+3);
+  ctx.textAlign='left';
+
+  // Flèche de mouvement
+  if(running && Math.abs(bubVel)>2){
+    const dir=bubVel>0?-1:1, ay=bubY+dir*(R+4), tip=ay+dir*13;
+    ctx.strokeStyle=col; ctx.lineWidth=2; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(W/2,ay); ctx.lineTo(W/2,tip); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(W/2-5,tip-dir*5); ctx.lineTo(W/2,tip); ctx.lineTo(W/2+5,tip-dir*5); ctx.stroke();
+  }
+
+  // Label altitude
+  ctx.fillStyle='rgba(26,46,66,0.45)'; ctx.font='8px JetBrains Mono,monospace';
+  ctx.textAlign='right';
+  ctx.fillText(Math.round(alt).toLocaleString()+' ft', W-3, bubY-R-4);
+  ctx.textAlign='left';
+}
+
+/* ── Animation ── */
+function startAnim(){
+  if(running) return;
+  running=true; bubAlt=0; bubVel=p('pert');
+  document.getElementById('btn-play').textContent='▶ En cours…';
+  document.getElementById('btn-play').classList.add('active');
+  document.getElementById('ss').textContent='↑ Impulsion initiale…';
+  document.getElementById('ss').style.color='#c05800';
+  scheduleStep();
+}
+function scheduleStep(){ rafId=setTimeout(step, FPS_INTERVAL); }
+function step(){
+  if(!running) return;
+  const dt=dT(bubAlt);
+  bubVel+=dt*ACCEL_SCALE; bubVel*=DAMPING; bubAlt+=bubVel;
+  if(bubAlt<0){bubAlt=0;bubVel=0;}
+  if(bubAlt>MAXALT){bubAlt=MAXALT;bubVel=0;}
+  moveBubbleTo(bubAlt);
+  const ssEl=document.getElementById('ss'), lc=lcl(), lf=lfc();
+  if(bubAlt<lc&&bubVel>0){ ssEl.textContent='↑ Approche LCL'; ssEl.style.color='#c05800'; }
+  else if(bubAlt<lc&&bubVel<=0){ ssEl.textContent='↓ Retombée sous LCL'; ssEl.style.color='#1a6bb5'; }
+  else if(lf&&bubAlt>=lc&&bubAlt<lf){ ssEl.textContent='↑ Entre LCL et LFC…'; ssEl.style.color='#c05800'; }
+  else if(dt>EPS){ ssEl.textContent='↑ Monte — plus chaude'; ssEl.style.color='#c0392b'; }
+  else if(dt<-EPS){ ssEl.textContent='↓ Descend — plus froide'; ssEl.style.color='#1a6bb5'; }
+  else{ ssEl.textContent='— Équilibre neutre'; ssEl.style.color='#4a6a85'; }
+  const stopped=(bubAlt<=0&&bubVel<=0)||bubAlt>=MAXALT||(Math.abs(bubVel)<1.5&&Math.abs(dt)<EPS);
+  if(stopped){
+    running=false;
+    document.getElementById('btn-play').textContent='▶ Lancer';
+    document.getElementById('btn-play').classList.remove('active');
+    if(bubAlt<=10){ ssEl.textContent='⬇ Retombée au sol'; ssEl.style.color='#1a6bb5'; }
+    else if(bubAlt>=MAXALT-50){ ssEl.textContent='⬆ Instabilité totale'; ssEl.style.color='#c0392b'; }
+    else{ ssEl.textContent='⊙ Niveau d\'équilibre atteint'; ssEl.style.color='#4a6a85'; }
+    return;
+  }
+  scheduleStep();
+}
+
+function resetAll(){
+  running=false; clearTimeout(rafId); bubAlt=0; bubVel=0;
+  document.getElementById('btn-play').textContent='▶ Lancer';
+  document.getElementById('btn-play').classList.remove('active');
+  document.getElementById('sa').textContent='0 ft';
+  document.getElementById('sd').textContent='—'; document.getElementById('sd').style.color=getComputedStyle(document.documentElement).getPropertyValue('--white');
+  const ssEl=document.getElementById('ss'); ssEl.textContent='En attente'; ssEl.style.color='#7a9db5';
+  if(chart){ delete chart.options.plugins.annotation.annotations.bubDot; chart.update('none'); }
+  drawSky(0,0);
+}
+
+/* ── Event listeners ── */
+document.getElementById('t0').addEventListener('input',()=>{
+  document.getElementById('tv').textContent=p('t0')+'°C';
+  enforceDP(); resetAll(); buildChart();
+});
+document.getElementById('dp').addEventListener('input',()=>{
+  enforceDP();
+  document.getElementById('dv').textContent=dpEff()+'°C';
+  resetAll(); buildChart();
+});
+document.getElementById('elr').addEventListener('input',()=>{
+  const v=p('elr');
+  document.getElementById('ev').textContent=v.toFixed(1);
+  updateElrHint(); resetAll(); buildChart();
+});
+document.getElementById('pert').addEventListener('input',()=>{
+  document.getElementById('ptv').textContent=p('pert');
+  updatePertHint();
+});
+
+/* ── Init ── */
+buildChart();
+setTimeout(()=>drawSky(0,0), 100);
+</script>
+</body>
+</html>
