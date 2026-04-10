@@ -1,0 +1,378 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+.shell{font-family:'DM Sans',sans-serif;background:linear-gradient(180deg,#eaf4ff 0%,#f7f9fc 60%);padding:20px 16px 24px;border-radius:12px;position:relative;overflow:hidden}
+.sky-stripe{position:absolute;top:0;left:0;right:0;height:80px;background:linear-gradient(180deg,#c8e6f7 0%,transparent 100%);pointer-events:none;border-radius:12px 12px 0 0}
+h1{font-size:14px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:#4a7fa5;margin-bottom:16px;position:relative}
+.controls-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.ctrl{background:#fff;border:0.5px solid #ccdde8;border-radius:10px;padding:9px 11px}
+.ctrl label{display:block;font-size:10px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:#7a9db5;margin-bottom:5px}
+.ctrl-row{display:flex;align-items:center;gap:6px}
+.ctrl-row input[type=range]{flex:1;height:3px;accent-color:#378add;cursor:pointer}
+.val{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;color:#1a3a52;min-width:44px;text-align:right}
+.warn{font-size:9px;color:#d4822a;margin-top:3px;min-height:12px}
+.pert-hint{font-size:9px;margin-top:3px;min-height:12px;font-family:'DM Mono',monospace}
+.main-grid{display:grid;grid-template-columns:1fr 180px;gap:12px;align-items:start}
+.chart-wrap{background:#fff;border:0.5px solid #ccdde8;border-radius:10px;padding:10px}
+.chart-inner{position:relative;height:380px}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px;padding:0 2px}
+.li{display:flex;align-items:center;gap:5px;font-size:10px;color:#7a9db5;font-weight:500;letter-spacing:.03em;text-transform:uppercase}
+.li-dash{width:18px;height:0;border-top:2px solid}
+.li-solid{width:18px;height:2px}
+.btns{display:flex;gap:8px;margin-top:8px}
+.btns button{flex:1;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:7px 8px;border-radius:8px;border:0.5px solid #ccdde8;background:#fff;color:#1a3a52;cursor:pointer;transition:background .15s}
+.btns button:hover{background:#eaf4ff}
+.btns button.active-btn{background:#378add;color:#fff;border-color:#378add}
+.side{display:flex;flex-direction:column;gap:8px}
+.sky-card{background:#fff;border:0.5px solid #ccdde8;border-radius:10px;overflow:hidden}
+.info-card{background:#fff;border:0.5px solid #ccdde8;border-radius:10px;padding:8px 10px}
+.info-label{font-size:9px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:#7a9db5;margin-bottom:2px}
+.info-val{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:#1a3a52}
+.stab-badge{display:inline-block;font-size:10px;font-weight:500;padding:3px 8px;border-radius:20px;letter-spacing:.02em}
+</style>
+<div class="shell">
+<div class="sky-stripe"></div>
+<h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden">Explorateur DALR SALR ELR avec simulation physique de bulle convective</h2>
+<h1>Atmosphère &amp; convection thermique</h1>
+<div class="controls-row">
+  <div class="ctrl">
+    <label>ELR (°C / 1000 ft)</label>
+    <div class="ctrl-row"><input type="range" id="elr" min="0.5" max="5" step="0.1" value="2.5"><span class="val" id="ev">2.5</span></div>
+  </div>
+  <div class="ctrl">
+    <label>T° sol (°C)</label>
+    <div class="ctrl-row"><input type="range" id="t0" min="-10" max="40" step="1" value="20"><span class="val" id="tv">20°C</span></div>
+    <div class="warn" id="dp-warn"></div>
+  </div>
+  <div class="ctrl">
+    <label>Point de rosée (°C)</label>
+    <div class="ctrl-row"><input type="range" id="dp" min="-20" max="40" step="1" value="11"><span class="val" id="dv">11°C</span></div>
+    <div class="warn" id="t0-warn"></div>
+  </div>
+  <div class="ctrl">
+    <label>Perturbation initiale</label>
+    <div class="ctrl-row"><input type="range" id="pert" min="0" max="400" step="5" value="80"><span class="val" id="ptv">80</span></div>
+    <div class="pert-hint" id="pert-hint"></div>
+  </div>
+</div>
+<div class="main-grid">
+  <div class="chart-wrap">
+    <div class="legend">
+      <div class="li"><span class="li-solid" style="background:#378add"></span>ELR</div>
+      <div class="li"><span class="li-dash" style="border-color:#E24B4A"></span>DALR 3°/1000ft</div>
+      <div class="li"><span class="li-dash" style="border-color:#1D9E75"></span>SALR 1.8°/1000ft</div>
+      <div class="li"><span class="li-dash" style="border-color:#d4822a"></span>Trajectoire bulle</div>
+    </div>
+    <div class="chart-inner"><canvas id="skewt"></canvas></div>
+    <div class="btns">
+      <button id="btn-play" onclick="startAnim()">▶ Lancer</button>
+      <button onclick="resetAll()">↺ Reset</button>
+    </div>
+  </div>
+  <div class="side">
+    <div class="sky-card"><canvas id="sky" width="180" height="230"></canvas></div>
+    <div class="info-card"><div class="info-label">Altitude</div><div class="info-val" id="sa">0 ft</div></div>
+    <div class="info-card"><div class="info-label">ΔT bulle − env.</div><div class="info-val" id="sd">—</div></div>
+    <div class="info-card"><div class="info-label">État</div><div class="info-val" id="ss" style="font-size:11px;color:#7a9db5">En attente</div></div>
+    <div class="info-card"><div class="info-label">Stabilité</div><div id="sstab"><span class="stab-badge" style="background:#f0f3f5;color:#7a9db5">—</span></div></div>
+  </div>
+</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.0.1/chartjs-plugin-annotation.min.js"></script>
+<script>
+const DALR=3.0,SALR=1.8,MAXALT=18000,EPS=0.08;
+const FPS_INTERVAL=50,DAMPING=0.992,ACCEL_SCALE=3.5;
+let chart=null,rafId=null,running=false,bubAlt=0,bubVel=0;
+
+function p(id){return parseFloat(document.getElementById(id).value);}
+function dpEff(){return Math.min(p('dp'),p('t0'));}
+function lcl(){const s=p('t0')-dpEff();return s<=0?0:(s/2.5)*1000;}
+function tEnv(a){return p('t0')-p('elr')*a/1000;}
+function tBub(a){const lc=lcl();if(a<=lc)return p('t0')-DALR*a/1000;return(p('t0')-DALR*lc/1000)-SALR*(a-lc)/1000;}
+function dT(a){return tBub(a)-tEnv(a);}
+
+function lfc(){
+  const lc=lcl();
+  for(let a=lc;a<=MAXALT;a+=50){if(dT(a)>EPS)return a;}
+  return null;
+}
+
+function enforceDP(){
+  const t0=p('t0'),dp=p('dp'),dpEl=document.getElementById('dp'),w=document.getElementById('dp-warn');
+  if(dp>t0){dpEl.value=t0;document.getElementById('dv').textContent=t0+'°C';w.textContent='Limité à T° sol ('+t0+'°C)';}
+  else w.textContent='';
+}
+
+function simMaxAlt(v0){
+  let a=0,v=v0;
+  for(let i=0;i<3000;i++){
+    v+=dT(a)*ACCEL_SCALE;v*=DAMPING;a+=v;
+    if(a<=0&&v<=0)return 0;
+    if(a>MAXALT)return MAXALT;
+  }
+  return a;
+}
+
+function seuilLFC(){
+  const lf=lfc();
+  if(!lf)return null;
+  if(p('elr')>DALR)return 0;
+  if(simMaxAlt(400)<lf)return null;
+  let lo=0,hi=400;
+  for(let i=0;i<30;i++){const mid=(lo+hi)/2;if(simMaxAlt(mid)>=lf)hi=mid;else lo=mid;}
+  return Math.ceil(hi);
+}
+
+function updatePertHint(){
+  const hint=document.getElementById('pert-hint');
+  const elr=p('elr'),lf=lfc();
+  if(Math.abs(elr-DALR)<EPS||Math.abs(elr-SALR)<EPS){hint.textContent='';return;}
+  if(elr>DALR){hint.style.color='#c0392b';hint.textContent='Instable sans perturbation';return;}
+  if(elr<SALR){hint.style.color='#185fa5';hint.textContent='Stable même saturé';return;}
+  if(!lf){hint.style.color='#185fa5';hint.textContent='Stable au-dessus du LCL';return;}
+  const seuil=seuilLFC();
+  if(seuil===null){hint.style.color='#185fa5';hint.textContent='Trop stable, max insuffisant';return;}
+  if(seuil===0){hint.style.color='#1D9E75';hint.textContent='Emballe sans perturbation';return;}
+  const cur=p('pert');
+  if(cur>=seuil){hint.style.color='#1D9E75';hint.textContent='≥ seuil LFC ('+seuil+') ✓';}
+  else{hint.style.color='#E24B4A';hint.textContent='Seuil LFC ≈ '+seuil+' ft/s';}
+}
+
+function stabLabel(elr){
+  if(Math.abs(elr-DALR)<EPS)return{t:'Neutre (sec)',bg:'#f0f3f5',fg:'#7a9db5'};
+  if(Math.abs(elr-SALR)<EPS)return{t:'Neutre (saturé)',bg:'#f0f3f5',fg:'#7a9db5'};
+  if(elr>DALR)return{t:'Absolument instable',bg:'#fde8e8',fg:'#c0392b'};
+  if(elr<SALR)return{t:'Absolument stable',bg:'#e6f1fb',fg:'#185fa5'};
+  return{t:'Cond. instable',bg:'#fef3e0',fg:'#9a6200'};
+}
+
+function buildChart(){
+  enforceDP();
+  const elr=p('elr'),t0=p('t0'),lc=lcl(),lf=lfc();
+  const alts=[];for(let a=0;a<=MAXALT;a+=400)alts.push(a);
+  const elrD=alts.map(a=>({x:t0-elr*a/1000,y:a}));
+  const dalrD=alts.map(a=>({x:t0-DALR*a/1000,y:a}));
+  const salrD=alts.map(a=>({x:t0-SALR*a/1000,y:a}));
+  const bubD=alts.map(a=>({x:tBub(a),y:a}));
+  const allX=[...elrD,...dalrD].map(d=>d.x);
+  const xMin=Math.min(...allX)-3,xMax=t0+5;
+  const gc='rgba(55,138,221,0.07)',tc='#7a9db5';
+  const stab=stabLabel(elr);
+  const zmap={'#c0392b':'rgba(226,75,74,.05)','#185fa5':'rgba(55,138,221,.06)','#9a6200':'rgba(240,153,43,.05)','#7a9db5':'rgba(122,157,181,.04)'};
+  const anns={zone:{type:'box',xMin,xMax,yMin:0,yMax:MAXALT,backgroundColor:zmap[stab.fg]||'transparent',borderWidth:0,drawTime:'beforeDatasetsDraw'}};
+  if(lc>0&&lc<MAXALT){
+    anns.lcl={type:'line',yMin:lc,yMax:lc,borderColor:'#d4822a',borderWidth:1,borderDash:[4,4],
+      label:{content:'LCL ~'+Math.round(lc/100)*100+' ft',display:true,position:'start',font:{size:9,family:'DM Mono'},color:'#d4822a',backgroundColor:'rgba(255,255,255,0.85)',padding:2}};
+  }
+  if(lf&&lf<MAXALT){
+    anns.lfc={type:'line',yMin:lf,yMax:lf,borderColor:'#1D9E75',borderWidth:1.5,borderDash:[2,3],
+      label:{content:'LFC ~'+Math.round(lf/100)*100+' ft',display:true,position:'start',font:{size:9,family:'DM Mono'},color:'#1D9E75',backgroundColor:'rgba(255,255,255,0.85)',padding:2}};
+  }
+  const datasets=[
+    {label:'ELR',data:elrD,borderColor:'#378add',pointRadius:0,borderWidth:2.5,fill:false,tension:0,parsing:{xAxisKey:'x',yAxisKey:'y'}},
+    {label:'DALR',data:dalrD,borderColor:'#E24B4A',pointRadius:0,borderWidth:1.8,borderDash:[6,3],fill:false,tension:0,parsing:{xAxisKey:'x',yAxisKey:'y'}},
+    {label:'SALR',data:salrD,borderColor:'#1D9E75',pointRadius:0,borderWidth:1.8,borderDash:[4,4],fill:false,tension:0,parsing:{xAxisKey:'x',yAxisKey:'y'}},
+    {label:'Bulle',data:bubD,borderColor:'#d4822a',pointRadius:0,borderWidth:1.5,borderDash:[3,3],fill:false,tension:0,parsing:{xAxisKey:'x',yAxisKey:'y'}},
+  ];
+  const opts={responsive:true,maintainAspectRatio:false,animation:false,
+    plugins:{legend:{display:false},
+      tooltip:{mode:'index',intersect:false,callbacks:{title:i=>Math.round(i[0].parsed.y).toLocaleString()+' ft',label:i=>i.dataset.label+': '+i.parsed.x.toFixed(1)+'°C'}},
+      annotation:{annotations:anns}},
+    scales:{
+      x:{type:'linear',min:xMin,max:xMax,title:{display:true,text:'Température (°C)',color:tc,font:{size:11,family:'DM Sans'}},ticks:{color:tc,font:{size:10},callback:v=>v+'°'},grid:{color:gc}},
+      y:{type:'linear',min:0,max:MAXALT,title:{display:true,text:'Altitude (ft)',color:tc,font:{size:11,family:'DM Sans'}},ticks:{color:tc,font:{size:10},stepSize:2000,callback:v=>v.toLocaleString()},grid:{color:gc}}
+    }};
+  if(chart){chart.data.datasets=datasets;chart.options.scales.x.min=xMin;chart.options.scales.x.max=xMax;chart.options.plugins.annotation.annotations=anns;chart.update('none');}
+  else chart=new Chart(document.getElementById('skewt'),{type:'line',data:{datasets},options:opts});
+  updateStabLabel();updatePertHint();moveBubbleTo(bubAlt);
+}
+
+function updateStabLabel(){
+  const s=stabLabel(p('elr'));
+  document.getElementById('sstab').innerHTML='<span class="stab-badge" style="background:'+s.bg+';color:'+s.fg+'">'+s.t+'</span>';
+}
+
+function moveBubbleTo(alt){
+  if(!chart)return;
+  const dt=dT(alt);
+  const col=dt>EPS?'#E24B4A':dt<-EPS?'#378add':'#7a9db5';
+  chart.options.plugins.annotation.annotations.bubDot={type:'point',xValue:tBub(alt),yValue:alt,radius:8,backgroundColor:col,borderColor:'#fff',borderWidth:2};
+  chart.update('none');
+  document.getElementById('sa').textContent=Math.round(alt).toLocaleString()+' ft';
+  const dtEl=document.getElementById('sd');
+  dtEl.textContent=(dt>=0?'+':'')+dt.toFixed(1)+' °C';
+  dtEl.style.color=col;
+  drawSky(alt,dt);
+}
+
+function drawSky(alt,dt){
+  const c=document.getElementById('sky'),W=c.width,H=c.height,ctx=c.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+
+  // Ciel + sol
+  const skyG=ctx.createLinearGradient(0,0,0,H-24);
+  skyG.addColorStop(0,'#b8d8ef');skyG.addColorStop(0.5,'#d6ecf7');skyG.addColorStop(1,'#e8f5d0');
+  ctx.fillStyle=skyG;ctx.fillRect(0,0,W,H-24);
+  const hazeG=ctx.createLinearGradient(0,H-50,0,H-24);
+  hazeG.addColorStop(0,'rgba(255,255,255,0)');hazeG.addColorStop(1,'rgba(220,235,200,0.6)');
+  ctx.fillStyle=hazeG;ctx.fillRect(0,H-50,W,26);
+  const gG=ctx.createLinearGradient(0,H-24,0,H);
+  gG.addColorStop(0,'#a8c96e');gG.addColorStop(1,'#7da44a');
+  ctx.fillStyle=gG;ctx.fillRect(0,H-24,W,24);
+
+  // Petits nuages décoratifs de fond
+  function bgCloud(cx,cy,sc,al){
+    ctx.globalAlpha=al;ctx.fillStyle='#fff';
+    [{dx:0,dy:0,r:10*sc},{dx:10*sc,dy:2*sc,r:8*sc},{dx:-9*sc,dy:3*sc,r:7*sc},{dx:0,dy:6*sc,r:9*sc}]
+    .forEach(pf=>{ctx.beginPath();ctx.arc(cx+pf.dx,cy+pf.dy,pf.r,0,Math.PI*2);ctx.fill();});
+    ctx.globalAlpha=1;
+  }
+  bgCloud(28,38,1.3,0.28);bgCloud(148,60,0.9,0.2);bgCloud(88,20,0.8,0.16);
+
+  const lc=lcl(),lf=lfc();
+
+  // Conversion altitude → y canvas
+  function altToY(a){return (H-24)-(a/MAXALT)*(H-24);}
+
+  const lclY=altToY(lc);
+  const bubY=altToY(alt);
+
+  // --- NUAGE CONVECTIF ---
+  // La base est ancrée au LCL, le sommet suit la bulle (seulement si bulle > LCL)
+  if(lc>0&&lc<MAXALT&&alt>lc){
+    const cloudTop=bubY;       // sommet = position actuelle de la bulle
+    const cloudBase=lclY;      // base fixe = LCL
+    const cloudHeight=cloudBase-cloudTop; // en pixels (base > top car y inversé)
+    const cx=W/2;
+
+    // Progression verticale 0→1
+    const prog=Math.min(1,cloudHeight/((H-24)*0.4));
+
+    // Largeur du nuage croît avec la hauteur (cumulus s'élargit vers le haut)
+    const baseWidth=20+prog*18;
+
+    ctx.fillStyle='rgba(255,255,255,0.92)';
+
+    // On dessine des rangées de pompons de la base vers le sommet
+    // Plus on monte, plus les pompons sont gros (tour convective)
+    const steps=Math.max(2,Math.round(cloudHeight/10));
+    for(let i=0;i<=steps;i++){
+      const frac=i/steps; // 0 = base, 1 = sommet
+      const rowY=cloudBase-frac*cloudHeight;
+      const rowWidth=baseWidth*(0.5+frac*0.9); // plus large vers le haut
+      const nPuffs=Math.max(1,Math.round(1+frac*3));
+      const alpha=0.55+prog*0.35;
+      ctx.globalAlpha=alpha;
+      for(let j=0;j<nPuffs;j++){
+        const offsetX=(j-(nPuffs-1)/2)*(rowWidth*0.8);
+        const r=rowWidth*(0.35+frac*0.25);
+        ctx.beginPath();ctx.arc(cx+offsetX,rowY,r,0,Math.PI*2);ctx.fill();
+      }
+    }
+
+    // Ombre portée sous la base (au niveau du LCL)
+    ctx.globalAlpha=0.12;ctx.fillStyle='#4a7fa5';
+    ctx.beginPath();ctx.ellipse(cx,cloudBase+6,baseWidth*0.8,4,0,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;
+  }
+
+  // Lignes LCL et LFC
+  if(lc>0&&lc<MAXALT){
+    ctx.strokeStyle='#d4822a';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(0,lclY);ctx.lineTo(W,lclY);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#d4822a';ctx.font='bold 8px DM Mono,monospace';
+    ctx.fillText('LCL',3,lclY-3);
+  }
+  if(lf&&lf<MAXALT){
+    const lfY=altToY(lf);
+    ctx.strokeStyle='#1D9E75';ctx.lineWidth=1;ctx.setLineDash([2,3]);
+    ctx.beginPath();ctx.moveTo(0,lfY);ctx.lineTo(W,lfY);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#1D9E75';ctx.font='bold 8px DM Mono,monospace';
+    ctx.fillText('LFC',3,lfY-3);
+  }
+
+  // Bulle (toujours au-dessus du nuage)
+  const R=15;
+  const col=dt>EPS?'#E24B4A':dt<-EPS?'#378add':'#7a9db5';
+  const colFill=dt>EPS?'rgba(226,75,74,0.88)':dt<-EPS?'rgba(55,138,221,0.88)':'rgba(122,157,181,0.88)';
+  ctx.beginPath();ctx.arc(W/2,bubY,R,0,Math.PI*2);
+  ctx.fillStyle=colFill;ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.85)';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle='#fff';ctx.font='bold 8px DM Mono,monospace';ctx.textAlign='center';
+  ctx.fillText((dt>=0?'+':'')+dt.toFixed(1)+'°',W/2,bubY+3);
+  ctx.textAlign='left';
+
+  // Flèche de mouvement
+  if(running&&Math.abs(bubVel)>2){
+    const dir=bubVel>0?-1:1,ay=bubY+dir*(R+4),tip=ay+dir*14;
+    ctx.strokeStyle=col;ctx.lineWidth=2;ctx.setLineDash([]);
+    ctx.beginPath();ctx.moveTo(W/2,ay);ctx.lineTo(W/2,tip);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(W/2-5,tip-dir*6);ctx.lineTo(W/2,tip);ctx.lineTo(W/2+5,tip-dir*6);ctx.stroke();
+  }
+
+  // Altitude label
+  ctx.fillStyle='rgba(26,58,82,0.45)';ctx.font='8px DM Mono,monospace';ctx.textAlign='right';
+  ctx.fillText(Math.round(alt).toLocaleString()+' ft',W-4,bubY-R-4);
+  ctx.textAlign='left';
+}
+
+function startAnim(){
+  if(running)return;
+  running=true;bubAlt=0;bubVel=p('pert');
+  document.getElementById('btn-play').textContent='▶ En cours…';
+  document.getElementById('btn-play').classList.add('active-btn');
+  document.getElementById('ss').textContent='↑ Impulsion…';
+  document.getElementById('ss').style.color='#d4822a';
+  scheduleStep();
+}
+function scheduleStep(){rafId=setTimeout(step,FPS_INTERVAL);}
+function step(){
+  if(!running)return;
+  const dt=dT(bubAlt);
+  bubVel+=dt*ACCEL_SCALE;bubVel*=DAMPING;bubAlt+=bubVel;
+  if(bubAlt<0){bubAlt=0;bubVel=0;}
+  if(bubAlt>MAXALT){bubAlt=MAXALT;bubVel=0;}
+  moveBubbleTo(bubAlt);
+  const ssEl=document.getElementById('ss'),lc=lcl(),lf=lfc();
+  if(bubAlt<lc&&bubVel>0){ssEl.textContent='↑ Approche LCL';ssEl.style.color='#d4822a';}
+  else if(bubAlt<lc&&bubVel<=0){ssEl.textContent='↓ Retombée sous LCL';ssEl.style.color='#378add';}
+  else if(lf&&bubAlt>=lc&&bubAlt<lf){ssEl.textContent='↑ Entre LCL et LFC…';ssEl.style.color='#9a6200';}
+  else if(dt>EPS){ssEl.textContent='↑ Monte — plus chaude';ssEl.style.color='#E24B4A';}
+  else if(dt<-EPS){ssEl.textContent='↓ Descend — plus froide';ssEl.style.color='#378add';}
+  else{ssEl.textContent='— Équilibre neutre';ssEl.style.color='#7a9db5';}
+  const stopped=(bubAlt<=0&&bubVel<=0)||bubAlt>=MAXALT||(Math.abs(bubVel)<1.5&&Math.abs(dt)<EPS);
+  if(stopped){
+    running=false;
+    document.getElementById('btn-play').textContent='▶ Lancer';
+    document.getElementById('btn-play').classList.remove('active-btn');
+    if(bubAlt<=10){ssEl.textContent='⬇ Retombée au sol';ssEl.style.color='#378add';}
+    else if(bubAlt>=MAXALT-50){ssEl.textContent='⬆ Instabilité totale';ssEl.style.color='#E24B4A';}
+    else{ssEl.textContent='⊙ Niveau d\'équilibre';ssEl.style.color='#7a9db5';}
+    return;
+  }
+  scheduleStep();
+}
+
+function resetAll(){
+  running=false;clearTimeout(rafId);bubAlt=0;bubVel=0;
+  document.getElementById('btn-play').textContent='▶ Lancer';
+  document.getElementById('btn-play').classList.remove('active-btn');
+  document.getElementById('sa').textContent='0 ft';
+  document.getElementById('sd').textContent='—';document.getElementById('sd').style.color='#1a3a52';
+  const ssEl=document.getElementById('ss');ssEl.textContent='En attente';ssEl.style.color='#7a9db5';
+  if(chart){delete chart.options.plugins.annotation.annotations.bubDot;chart.update('none');}
+  drawSky(0,0);
+}
+
+document.getElementById('t0').addEventListener('input',()=>{document.getElementById('tv').textContent=p('t0')+'°C';enforceDP();resetAll();buildChart();});
+document.getElementById('dp').addEventListener('input',()=>{enforceDP();document.getElementById('dv').textContent=dpEff()+'°C';resetAll();buildChart();});
+document.getElementById('elr').addEventListener('input',()=>{document.getElementById('ev').textContent=p('elr').toFixed(1);resetAll();buildChart();});
+document.getElementById('pert').addEventListener('input',()=>{document.getElementById('ptv').textContent=p('pert');updatePertHint();});
+
+buildChart();
+setTimeout(()=>drawSky(0,0),100);
+</script>
